@@ -157,19 +157,28 @@ async function callGrokAPI(apiKey, tweetContent) {
 
 // Generate analysis prompt for Grok
 function generateAnalysisPrompt(content) {
-  return `Analyze this tweet for virality potential based on X's recommendation algorithm.
+  return `You are an expert Twitter growth advisor. Analyze this tweet and provide ACTIONABLE, SPECIFIC feedback to improve engagement.
 
 Tweet: "${content}"
 
-X's algorithm predicts engagement using these factors:
-1. **Engagement Predictions**: P(like), P(reply), P(retweet), P(quote), P(click), P(share), P(follow_author)
-2. **Content Quality**: Interesting, valuable, relevant, clear
-3. **Structure**: Hashtags (1-2 optimal), mentions, links, media, questions
-4. **Tone**: Inspirational, educational, controversial, humorous, neutral
-5. **Readability**: Clear language, proper formatting, emojis, line breaks
-6. **Negative Signals**: P(not_interested), P(block), P(mute), P(report)
+IMPORTANT INSTRUCTIONS:
+- Be direct and honest about what's lacking
+- Focus on HIGH-IMPACT changes the user can make RIGHT NOW
+- Don't rewrite the entire tweet - keep the core message intact
+- Suggest SPECIFIC edits (add this emoji, use this hashtag, rephrase this part)
+- Prioritize changes by impact (what will move the needle most)
+- Make suggestions feel like a conversation, not a lecture
 
-Provide detailed analysis in this exact JSON format:
+X's algorithm favors:
+✅ 100-250 characters (sweet spot for engagement)
+✅ 1-2 relevant hashtags (not more)
+✅ Questions that drive replies
+✅ Emotional triggers (curiosity, inspiration, controversy)
+✅ Clear value (teach, entertain, inspire)
+✅ Visual indicators (emojis, line breaks)
+✅ Authentic voice (not corporate/bland)
+
+Provide analysis in this exact JSON format:
 {
   "overallScore": <number 0-100>,
   "rating": "<Viral Potential|Strong Performance|Good|Needs Improvement|Low Engagement>",
@@ -190,28 +199,26 @@ Provide detailed analysis in this exact JSON format:
     "likes": "<high|medium|low>",
     "replies": "<high|medium|low>",
     "retweets": "<high|medium|low>",
-    "reasoning": "<brief explanation>"
+    "reasoning": "<1 sentence explaining why>"
   },
   "tone": "<inspirational|educational|controversial|humorous|neutral|other>",
   "strengths": [
-    "<specific strength 1>",
-    "<specific strength 2>"
+    "<specific thing done well - max 2 items>"
   ],
   "suggestions": [
     {
-      "issue": "<what's wrong>",
-      "suggestion": "<how to fix it>",
+      "issue": "<What's missing or weak>",
+      "suggestion": "<SPECIFIC edit to make. Example: 'Add: What's your favorite tip? at the end' or 'Replace X with Y' or 'Add 🔥 emoji before the key point'>",
       "impact": "<high|medium|low>"
     }
   ],
-  "rewriteExample": "<improved version of the tweet>",
+  "rewriteExample": "<Apply your TOP 3 suggestions to the original tweet. Keep the core message and style, just enhance it with your suggestions. Don't completely rewrite - iterate on what's there. IMPORTANT: Do NOT add hashtags to the rewrite unless the original tweet already had them. Only suggest hashtags in the suggestions section, not in the actual rewrite.>",
   "risks": [
-    "<potential negative signal 1>",
-    "<potential negative signal 2>"
+    "<1-2 specific risks IF ANY, otherwise empty array>"
   ]
 }
 
-Be specific, actionable, and honest. If content is weak, say so clearly.`;
+CRITICAL: Make suggestions ULTRA-SPECIFIC. Not "add emotion" but "Add 🚀 before your main point" or "End with: What do you think?" or "Change 'good' to 'game-changing'". The user should know EXACTLY what to type.`;
 }
 
 // Calculate estimated cost

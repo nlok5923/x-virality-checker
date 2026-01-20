@@ -27,20 +27,25 @@ function createSuggestionsList(suggestions) {
   });
 
   let html = '<div class="virality-suggestions-section">';
-  html += '<h3 class="section-title">💡 Suggestions for Improvement</h3>';
+  html += '<h3 class="section-title">⚡ Quick Wins - Make These Changes</h3>';
+  html += '<div class="suggestions-intro">Here\'s exactly what to edit to boost engagement:</div>';
   html += '<ul class="suggestions-list">';
 
-  sortedSuggestions.forEach(item => {
+  sortedSuggestions.forEach((item, index) => {
     const impactClass = `impact-${item.impact}`;
-    const impactBadge = getImpactBadge(item.impact);
+    const impactIcon = item.impact === 'high' ? '🔥' : item.impact === 'medium' ? '⭐' : '💡';
+    const number = index + 1;
 
     html += `
       <li class="suggestion-item ${impactClass}">
-        <div class="suggestion-header">
-          <span class="suggestion-impact-badge">${impactBadge}</span>
-          <span class="suggestion-issue">${item.issue}</span>
+        <div class="suggestion-number">${number}</div>
+        <div class="suggestion-content">
+          <div class="suggestion-action">
+            <span class="suggestion-icon">${impactIcon}</span>
+            <strong>${item.issue}</strong>
+          </div>
+          <div class="suggestion-how">${item.suggestion}</div>
         </div>
-        <p class="suggestion-text">${item.suggestion}</p>
       </li>
     `;
   });
@@ -55,25 +60,26 @@ function createRewriteExample(rewriteExample, originalContent) {
   if (!rewriteExample) return '';
 
   let html = '<div class="virality-rewrite-section">';
-  html += '<h3 class="section-title">✨ Suggested Rewrite</h3>';
+  html += '<h3 class="section-title">📝 Your Tweet With Improvements Applied</h3>';
+  html += '<p class="rewrite-description">Here\'s what it looks like with the top suggestions applied. Feel free to use it or pick what you like:</p>';
 
   html += '<div class="rewrite-comparison">';
 
   // Original
   html += '<div class="rewrite-box rewrite-original">';
-  html += '<div class="rewrite-label">Original</div>';
+  html += '<div class="rewrite-label">Before</div>';
   html += `<div class="rewrite-content">${escapeHtml(originalContent)}</div>`;
   html += '</div>';
 
   // Improved
   html += '<div class="rewrite-box rewrite-improved">';
-  html += '<div class="rewrite-label">Improved</div>';
+  html += '<div class="rewrite-label">After</div>';
   html += `<div class="rewrite-content">${escapeHtml(rewriteExample)}</div>`;
   html += '</div>';
 
   html += '</div>';
 
-  html += '<button class="btn-apply-rewrite" id="applyRewriteBtn">Apply This Rewrite</button>';
+  html += '<button class="btn-apply-rewrite" id="applyRewriteBtn">💡 Try This Version</button>';
 
   html += '</div>';
 

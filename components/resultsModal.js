@@ -38,10 +38,10 @@ function showResultsModal(analysis, originalContent) {
       <div class="virality-modal-body">
         ${createScoreCard(analysis)}
         ${createEngagementPrediction(analysis.engagementPrediction)}
-        ${createMetricsBreakdown(analysis.metrics)}
-        ${createStrengthsList(analysis.strengths)}
         ${createSuggestionsList(analysis.suggestions)}
+        ${createStrengthsList(analysis.strengths)}
         ${createRewriteExample(analysis.rewriteExample, originalContent)}
+        ${createMetricsBreakdown(analysis.metrics)}
         ${createRisksList(analysis.risks)}
 
         <div class="virality-footer-info">
