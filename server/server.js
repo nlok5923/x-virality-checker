@@ -43,6 +43,8 @@ app.get('/health', (req, res) => {
 
 // Analyze tweet endpoint
 app.post('/api/analyze', async (req, res) => {
+  console.log('📥 Received analysis request');
+
   try {
     const { content, followerCount, userBio } = req.body;
 
@@ -135,13 +137,14 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     // Return successful analysis
+    console.log('✅ Analysis completed successfully');
     res.json({
       success: true,
       analysis
     });
 
   } catch (error) {
-    console.error('Error in /api/analyze:', error);
+    console.error('❌ Error in /api/analyze:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Internal server error'
@@ -262,8 +265,10 @@ CRITICAL: Make suggestions ULTRA-SPECIFIC. Not "add emotion" but "Add 🚀 befor
 }
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ X Virality Checker API server running on port ${PORT}`);
   console.log(`   Health check: http://localhost:${PORT}/health`);
   console.log(`   Analyze endpoint: http://localhost:${PORT}/api/analyze`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`   GROK_API_KEY configured: ${GROK_API_KEY ? 'Yes' : 'No'}`);
 });
