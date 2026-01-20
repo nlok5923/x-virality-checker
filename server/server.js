@@ -19,7 +19,15 @@ if (!GROK_API_KEY) {
 
 // Middleware
 app.use(cors({
-  origin: ['chrome-extension://*', 'http://localhost:*'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, or Postman)
+    // or from chrome-extension:// origins
+    if (!origin || origin.startsWith('chrome-extension://')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for local development
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));

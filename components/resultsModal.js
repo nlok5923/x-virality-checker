@@ -200,11 +200,11 @@ function startProgressAnimation() {
   if (!progressBar || !statusText) return;
 
   const stages = [
-    { progress: 20, text: 'Analyzing content structure...', duration: 800 },
-    { progress: 40, text: 'Evaluating engagement factors...', duration: 1200 },
-    { progress: 60, text: 'Calculating virality score...', duration: 1000 },
-    { progress: 80, text: 'Generating suggestions...', duration: 1200 },
-    { progress: 95, text: 'Finalizing analysis...', duration: 800 }
+    { progress: 20, text: 'Analyzing content structure...', duration: 3000 },
+    { progress: 40, text: 'Evaluating engagement factors...', duration: 5000 },
+    { progress: 60, text: 'Calculating virality score...', duration: 6000 },
+    { progress: 80, text: 'Generating suggestions...', duration: 4000 },
+    { progress: 95, text: 'Finalizing analysis...', duration: 2000 }
   ];
 
   let currentStage = 0;
@@ -220,7 +220,7 @@ function startProgressAnimation() {
   }
 
   // Start animation
-  setTimeout(updateProgress, 300);
+  setTimeout(updateProgress, 1000);
 }
 
 function hideLoadingModal() {
