@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Virality Checker Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/>
+        </svg>
+      </div>
+      <h1 class="popup-title">X Virality Checker</h1>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="section">
+      <h2 class="section-title">🔑 Grok API Key</h2>
+      <p class="section-description">
+        Required to analyze your tweets. Get your free API key at
+        <a href="https://console.x.ai" target="_blank">console.x.ai</a>
+      </p>
+
+      <div class="input-group">
+        <input
+          type="password"
+          id="apiKeyInput"
+          class="input-field"
+          placeholder="Enter your Grok API key"
+        />
+        <button id="toggleKeyVisibility" class="btn-icon" title="Toggle visibility">
+          <svg id="eyeIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div id="apiKeyStatus" class="status-message"></div>
+
+      <button id="saveApiKeyBtn" class="btn btn-primary">Save API Key</button>
+    </div>
+
+    <!-- Usage Stats Section -->
+    <div class="section">
+      <h2 class="section-title">📊 Usage Statistics</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="analysisCount">0</div>
+          <div class="stat-label">Analyses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalCost">$0.00</div>
+          <div class="stat-label">Total Cost</div>
+        </div>
+      </div>
+
+      <p class="stat-note">This month's usage</p>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="section">
+      <h2 class="section-title">⚙️ Settings</h2>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="saveHistoryCheckbox" />
+        <span>Save analysis history</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="showWarningsCheckbox" />
+        <span>Show warnings before posting low-scoring tweets</span>
+      </label>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="section">
+      <button id="viewHistoryBtn" class="btn btn-secondary">View History</button>
+      <button id="clearHistoryBtn" class="btn btn-secondary">Clear History</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <p class="footer-text">
+        Powered by <strong>Grok AI</strong><br>
+        Based on X's open-source algorithm
+      </p>
+      <div class="footer-links">
+        <a href="https://github.com/xai-org/grok-1" target="_blank">Algorithm Info</a>
+        •
+        <a href="https://docs.x.ai" target="_blank">Grok Docs</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
