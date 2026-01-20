@@ -434,13 +434,13 @@ function handleAnalysisError(error) {
   console.error('Analysis error:', error);
 
   if (error.includes('Backend server is not running') || error.includes('Cannot connect to backend')) {
-    showToast('⚠️ Backend server is not running. Please start it first.', 'warning');
+    showToast('⚠️ Cannot connect to server. Please check your internet connection.', 'warning');
   } else if (error.includes('Rate limit')) {
     showToast('⏳ Rate limit exceeded. Please wait a moment.', 'warning');
   } else if (error.includes('Insufficient credits')) {
     showToast('💳 Insufficient Grok credits. Please add credits to your account.', 'error');
   } else if (error.includes('Network error') || error.includes('fetch')) {
-    showToast('🌐 Network error. Please check your connection and ensure the server is running.', 'error');
+    showToast('🌐 Network error. Please check your connection.', 'error');
   } else {
     showToast(`❌ Error: ${error}`, 'error');
   }

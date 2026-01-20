@@ -65,8 +65,8 @@ async function handleAnalyzeTweet(tweetContent, followerCount = null, userBio = 
 
 // Call backend analysis API
 async function callAnalysisAPI(tweetContent, followerCount, userBio) {
-  // Backend server URL - change this to your deployed server URL in production
-  const API_URL = 'http://localhost:3000/api/analyze';
+  // Backend server URL
+  const API_URL = 'https://x-virality-checker.onrender.com/api/analyze';
 
   try {
     const response = await fetch(API_URL, {
@@ -101,7 +101,7 @@ async function callAnalysisAPI(tweetContent, followerCount, userBio) {
     return data.analysis;
   } catch (error) {
     if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-      throw new Error('Cannot connect to backend server. Please ensure the server is running on http://localhost:3000');
+      throw new Error('Cannot connect to backend server. Please check your internet connection.');
     }
     throw error;
   }
