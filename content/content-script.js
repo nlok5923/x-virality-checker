@@ -7,9 +7,6 @@ const processedComposeBoxes = new WeakSet();
 
 // Initialize the extension
 function init() {
-  // Check if API key is configured
-  checkApiKeyStatus();
-
   // Start observing DOM for compose boxes
   observeTwitterDOM();
 
@@ -140,6 +137,10 @@ async function handleEvaluateClick(e) {
     return;
   }
 
+  // Get user's follower count and bio
+  const followerCount = getUserFollowerCount();
+  const userBio = getUserBio();
+
   // Check if chrome runtime is available
   if (!chrome || !chrome.runtime) {
     showToast('❌ Extension error: Chrome API not available', 'error');
@@ -155,7 +156,9 @@ async function handleEvaluateClick(e) {
     chrome.runtime.sendMessage(
       {
         action: 'analyzeTweet',
-        content: content
+        content: content,
+        followerCount: followerCount,
+        userBio: userBio
       },
       (response) => {
         hideLoadingModal();
@@ -211,6 +214,183 @@ function getTweetContent() {
   return '';
 }
 
+// Get user's follower count and bio from the page
+function getUserFollowerCount() {
+  try {
+    // Method 1: Try to get from Twitter's internal state/API data
+    // Twitter stores user data in window.__INITIAL_STATE__ or in React fiber
+    try {
+      // Look for any script tags that might contain user data
+      const scripts = document.querySelectorAll('script');
+      for (const script of scripts) {
+        if (script.textContent.includes('followers_count')) {
+          const match = script.textContent.match(/"followers_count":(\d+)/);
+          if (match) {
+            const count = parseInt(match[1]);
+            console.log('X Virality Checker: Found follower count in page state:', count);
+            return count;
+          }
+        }
+      }
+    } catch (e) {
+      // Continue to other methods
+    }
+
+    // Method 2: Look for data-testid attributes with follower count
+    const followerElements = document.querySelectorAll('[data-testid*="follower"]');
+    for (const el of followerElements) {
+      const text = el.textContent;
+      // Look for patterns like "1.2K" or "1,234" followed by "Followers"
+      const match = text.match(/([\d,.]+[KMB]?)\s*Followers?/i);
+      if (match) {
+        const count = parseFollowerCount(match[1]);
+        console.log('X Virality Checker: Found follower count via data-testid:', count);
+        return count;
+      }
+    }
+
+    // Method 3: Look in profile page links
+    const followersLinks = document.querySelectorAll('a[href*="/followers"]');
+    for (const link of followersLinks) {
+      const ariaLabel = link.getAttribute('aria-label');
+      if (ariaLabel && ariaLabel.includes('Follower')) {
+        const match = ariaLabel.match(/([\d,.]+[KMB]?)\s*Followers?/i);
+        if (match) {
+          const count = parseFollowerCount(match[1]);
+          console.log('X Virality Checker: Found follower count in link aria-label:', count);
+          return count;
+        }
+      }
+
+      // Also check span text inside the link
+      const spans = link.querySelectorAll('span');
+      for (const span of spans) {
+        const text = span.textContent.trim();
+        // Match just numbers with K/M/B
+        if (/^[\d,.]+[KMB]?$/.test(text)) {
+          const nextText = span.nextElementSibling?.textContent || '';
+          const prevText = span.previousElementSibling?.textContent || '';
+          const parentText = span.parentElement?.textContent || '';
+
+          if (parentText.toLowerCase().includes('follower')) {
+            const count = parseFollowerCount(text);
+            console.log('X Virality Checker: Found follower count in profile link:', count);
+            return count;
+          }
+        }
+      }
+    }
+
+    // Method 4: Search all text for follower count patterns
+    const allTextElements = document.querySelectorAll('a, span, div');
+    for (const el of allTextElements) {
+      // Only check elements with short text (avoid large content blocks)
+      if (el.textContent.length > 100) continue;
+
+      const text = el.textContent;
+      if (text.toLowerCase().includes('follower')) {
+        const match = text.match(/([\d,.]+[KMB]?)\s*Followers?/i);
+        if (match) {
+          const count = parseFollowerCount(match[1]);
+          if (count && count > 0 && count < 1000000000) { // Sanity check
+            console.log('X Virality Checker: Found follower count (fallback):', count);
+            return count;
+          }
+        }
+      }
+    }
+
+    console.warn('X Virality Checker: Could not find follower count');
+    return null;
+  } catch (error) {
+    console.error('X Virality Checker: Error getting follower count:', error);
+    return null;
+  }
+}
+
+// Parse follower count string to number
+function parseFollowerCount(str) {
+  if (!str) return null;
+
+  str = str.replace(/,/g, ''); // Remove commas
+
+  const multipliers = {
+    'K': 1000,
+    'M': 1000000,
+    'B': 1000000000
+  };
+
+  const match = str.match(/([\d.]+)([KMB])?/i);
+  if (match) {
+    const num = parseFloat(match[1]);
+    const multiplier = match[2] ? multipliers[match[2].toUpperCase()] : 1;
+    return Math.round(num * multiplier);
+  }
+
+  return parseInt(str) || null;
+}
+
+// Get user's bio from the page
+function getUserBio() {
+  try {
+    // Method 1: Try to get from Twitter's internal state
+    try {
+      const scripts = document.querySelectorAll('script');
+      for (const script of scripts) {
+        if (script.textContent.includes('description') && script.textContent.includes('screen_name')) {
+          const match = script.textContent.match(/"description":"([^"]+)"/);
+          if (match && match[1] && match[1].length > 10) {
+            const bio = match[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
+            console.log('X Virality Checker: Found bio in page state:', bio.substring(0, 50) + '...');
+            return bio;
+          }
+        }
+      }
+    } catch (e) {
+      // Continue to other methods
+    }
+
+    // Method 2: Look in profile header (if on profile page)
+    const bioElement = document.querySelector('[data-testid="UserDescription"]');
+    if (bioElement) {
+      const bio = bioElement.textContent.trim();
+      if (bio.length > 0) {
+        console.log('X Virality Checker: Found bio in profile:', bio.substring(0, 50) + '...');
+        return bio;
+      }
+    }
+
+    // Method 3: Look in hover card
+    const hoverCard = document.querySelector('[data-testid="HoverCard"]');
+    if (hoverCard) {
+      const bioInCard = hoverCard.querySelector('[data-testid="UserDescription"]');
+      if (bioInCard) {
+        const bio = bioInCard.textContent.trim();
+        if (bio.length > 0) {
+          console.log('X Virality Checker: Found bio in hover card:', bio.substring(0, 50) + '...');
+          return bio;
+        }
+      }
+    }
+
+    // Method 4: Try meta tags
+    const metaBio = document.querySelector('meta[property="og:description"]');
+    if (metaBio) {
+      const bio = metaBio.getAttribute('content');
+      if (bio && bio.length > 10 && !bio.includes('twitter.com') && !bio.toLowerCase().includes('latest tweets')) {
+        console.log('X Virality Checker: Found bio in meta tag:', bio.substring(0, 50) + '...');
+        return bio;
+      }
+    }
+
+    console.warn('X Virality Checker: Could not find user bio');
+    return null;
+  } catch (error) {
+    console.error('X Virality Checker: Error getting user bio:', error);
+    return null;
+  }
+}
+
 // Check rate limiting (uses background script for storage)
 async function checkRateLimit() {
   try {
@@ -253,44 +433,16 @@ function recordAnalysis() {
 function handleAnalysisError(error) {
   console.error('Analysis error:', error);
 
-  if (error === 'MISSING_API_KEY') {
-    showToast('⚠️ Please configure your Grok API key in the extension settings', 'warning');
-    // Open extension popup
-    setTimeout(() => {
-      chrome.runtime.sendMessage({ action: 'openPopup' });
-    }, 1500);
-  } else if (error.includes('Invalid API key')) {
-    showToast('❌ Invalid API key. Please check your settings.', 'error');
+  if (error.includes('Backend server is not running') || error.includes('Cannot connect to backend')) {
+    showToast('⚠️ Backend server is not running. Please start it first.', 'warning');
   } else if (error.includes('Rate limit')) {
     showToast('⏳ Rate limit exceeded. Please wait a moment.', 'warning');
   } else if (error.includes('Insufficient credits')) {
     showToast('💳 Insufficient Grok credits. Please add credits to your account.', 'error');
-  } else if (error.includes('Network error')) {
-    showToast('🌐 Network error. Please check your connection.', 'error');
+  } else if (error.includes('Network error') || error.includes('fetch')) {
+    showToast('🌐 Network error. Please check your connection and ensure the server is running.', 'error');
   } else {
     showToast(`❌ Error: ${error}`, 'error');
-  }
-}
-
-// Check if API key is configured
-function checkApiKeyStatus() {
-  try {
-    if (!chrome || !chrome.runtime) {
-      console.warn('Chrome runtime API not available');
-      return;
-    }
-
-    chrome.runtime.sendMessage({ action: 'checkApiKey' }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.warn('Could not check API key:', chrome.runtime.lastError);
-        return;
-      }
-      if (response && !response.status.configured) {
-        console.log('X Virality Checker: API key not configured');
-      }
-    });
-  } catch (error) {
-    console.error('Failed to check API key status:', error);
   }
 }
 

@@ -3,7 +3,6 @@
 function createMetricsBreakdown(metrics) {
   const metricLabels = {
     lengthScore: 'Length Optimization',
-    hashtagScore: 'Hashtag Strategy',
     mentionScore: 'Mentions & Tags',
     linkScore: 'Link Strategy',
     mediaIndicatorScore: 'Media Potential',
@@ -45,36 +44,50 @@ function createMetricsBreakdown(metrics) {
 function createEngagementPrediction(prediction) {
   if (!prediction) return '';
 
-  const getEngagementColor = (level) => {
-    if (level === 'high') return 'engagement-high';
-    if (level === 'medium') return 'engagement-medium';
-    return 'engagement-low';
+  const formatNumber = (num) => {
+    if (typeof num === 'string') num = parseInt(num);
+    if (isNaN(num)) return '~';
+
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
   };
 
-  const getEngagementIcon = (level) => {
-    if (level === 'high') return '🔥';
-    if (level === 'medium') return '👍';
-    return '📊';
-  };
+  // Add context about predictions
+  let contextNote;
+  if (prediction.followerCount && prediction.followerCount > 0) {
+    contextNote = `📊 Based on your ~${formatNumber(prediction.followerCount)} followers and content quality`;
+  } else {
+    contextNote = '📊 Based on estimated audience size and content quality (follower count not detected)';
+  }
 
   const html = `
     <div class="virality-engagement-section">
-      <h3 class="section-title">🎯 Predicted Engagement</h3>
-      <div class="engagement-grid">
-        <div class="engagement-item ${getEngagementColor(prediction.likes)}">
-          <span class="engagement-icon">${getEngagementIcon(prediction.likes)}</span>
-          <span class="engagement-label">Likes</span>
-          <span class="engagement-level">${capitalizeFirst(prediction.likes)}</span>
+      <h3 class="section-title">🎯 Predicted Performance</h3>
+      <p class="prediction-context">${contextNote}</p>
+      <div class="engagement-grid-numbers">
+        <div class="engagement-stat">
+          <div class="stat-icon">👁️</div>
+          <div class="stat-value">${formatNumber(prediction.views)}</div>
+          <div class="stat-label">Views</div>
         </div>
-        <div class="engagement-item ${getEngagementColor(prediction.replies)}">
-          <span class="engagement-icon">${getEngagementIcon(prediction.replies)}</span>
-          <span class="engagement-label">Replies</span>
-          <span class="engagement-level">${capitalizeFirst(prediction.replies)}</span>
+        <div class="engagement-stat">
+          <div class="stat-icon">❤️</div>
+          <div class="stat-value">${formatNumber(prediction.likes)}</div>
+          <div class="stat-label">Likes</div>
         </div>
-        <div class="engagement-item ${getEngagementColor(prediction.retweets)}">
-          <span class="engagement-icon">${getEngagementIcon(prediction.retweets)}</span>
-          <span class="engagement-label">Retweets</span>
-          <span class="engagement-level">${capitalizeFirst(prediction.retweets)}</span>
+        <div class="engagement-stat">
+          <div class="stat-icon">💬</div>
+          <div class="stat-value">${formatNumber(prediction.replies)}</div>
+          <div class="stat-label">Replies</div>
+        </div>
+        <div class="engagement-stat">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-value">${formatNumber(prediction.retweets)}</div>
+          <div class="stat-label">Retweets</div>
         </div>
       </div>
       ${prediction.reasoning ? `<p class="engagement-reasoning">${prediction.reasoning}</p>` : ''}

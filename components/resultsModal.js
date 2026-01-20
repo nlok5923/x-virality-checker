@@ -172,9 +172,13 @@ function showLoadingModal() {
     <div class="virality-modal-backdrop"></div>
     <div class="virality-modal-container loading">
       <div class="loading-content">
-        <div class="loading-spinner"></div>
+        <div class="loading-icon">⚡</div>
         <h3 class="loading-title">Analyzing with Grok AI...</h3>
         <p class="loading-subtitle">Evaluating your tweet's virality potential</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="analysisProgressBar"></div>
+        </div>
+        <p class="loading-status" id="loadingStatus">Initializing...</p>
       </div>
     </div>
   `;
@@ -184,6 +188,39 @@ function showLoadingModal() {
   requestAnimationFrame(() => {
     loadingModal.classList.add('show');
   });
+
+  // Start animated progress
+  startProgressAnimation();
+}
+
+function startProgressAnimation() {
+  const progressBar = document.getElementById('analysisProgressBar');
+  const statusText = document.getElementById('loadingStatus');
+
+  if (!progressBar || !statusText) return;
+
+  const stages = [
+    { progress: 20, text: 'Analyzing content structure...', duration: 800 },
+    { progress: 40, text: 'Evaluating engagement factors...', duration: 1200 },
+    { progress: 60, text: 'Calculating virality score...', duration: 1000 },
+    { progress: 80, text: 'Generating suggestions...', duration: 1200 },
+    { progress: 95, text: 'Finalizing analysis...', duration: 800 }
+  ];
+
+  let currentStage = 0;
+
+  function updateProgress() {
+    if (currentStage < stages.length) {
+      const stage = stages[currentStage];
+      progressBar.style.width = stage.progress + '%';
+      statusText.textContent = stage.text;
+      currentStage++;
+      setTimeout(updateProgress, stage.duration);
+    }
+  }
+
+  // Start animation
+  setTimeout(updateProgress, 300);
 }
 
 function hideLoadingModal() {

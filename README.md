@@ -29,10 +29,10 @@ A Chrome extension that seamlessly integrates into X/Twitter's interface, allowi
 ### Prerequisites
 
 1. **Chrome/Edge/Brave Browser** (Chromium-based)
-2. **Grok API Key** - Get yours at [console.x.ai](https://console.x.ai)
-3. **Grok Credits** - Load your account with credits (analyses cost ~$0.0005 each)
+2. **Node.js** (v16 or higher) - For running the backend server
+3. **Grok API Key** - Get yours at [console.x.ai](https://console.x.ai)
 
-### Install Extension
+### Setup Backend Server
 
 1. **Download/Clone this repository**
    ```bash
@@ -40,25 +40,51 @@ A Chrome extension that seamlessly integrates into X/Twitter's interface, allowi
    cd x-virality-extension
    ```
 
-2. **Create Extension Icons** (or use placeholders)
+2. **Install server dependencies**
+   ```bash
+   cd server
+   npm install
+   ```
+
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit the `.env` file and add your Grok API key:
+   ```
+   GROK_API_KEY=xai-your_api_key_here
+   PORT=3000
+   ```
+
+4. **Start the backend server**
+   ```bash
+   npm start
+   ```
+
+   You should see: `✅ X Virality Checker API server running on port 3000`
+
+   Keep this terminal window open while using the extension.
+
+### Install Extension
+
+1. **Create Extension Icons** (or use placeholders)
    - Place icon files in `assets/icons/`:
      - `icon16.png` (16x16px)
      - `icon48.png` (48x48px)
      - `icon128.png` (128x128px)
    - See [Icon Requirements](#-icon-requirements) below
 
-3. **Load Extension in Chrome**
+2. **Load Extension in Chrome**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top-right)
    - Click "Load unpacked"
    - Select the `x-virality-extension` folder
    - Extension should now appear in your toolbar
 
-4. **Configure API Key**
-   - Click the extension icon in your toolbar
-   - Enter your Grok API key
-   - Click "Save API Key"
-   - You should see "API key saved successfully! ✓"
+3. **You're ready!**
+   - No API key configuration needed in the extension
+   - The backend server handles all API calls securely
 
 ## 📖 Usage
 
@@ -141,9 +167,9 @@ Very affordable for individuals and businesses!
 
 Access settings by clicking the extension icon:
 
-### API Configuration
-- **Grok API Key**: Required for analysis
-- **Test Connection**: Automatically tested on save
+### Server Status
+- **Backend Server**: Must be running on `http://localhost:3000`
+- **Check server**: Visit `http://localhost:3000/health` to verify
 
 ### Preferences
 - **Save Analysis History**: Keep record of past analyses (up to 50)
@@ -197,8 +223,14 @@ Or use any online icon generator.
 ```
 x-virality-extension/
 ├── manifest.json                 # Extension manifest (V3)
+├── server/                       # Backend server (NEW)
+│   ├── server.js                # Express server for API calls
+│   ├── package.json             # Server dependencies
+│   ├── .env                     # Environment variables (API key)
+│   ├── .env.example             # Example env file
+│   └── README.md                # Server documentation
 ├── background/
-│   └── service-worker.js        # Handles Grok API calls
+│   └── service-worker.js        # Calls backend server
 ├── content/
 │   ├── content-script.js        # Injects UI into Twitter
 │   └── content-styles.css       # Styling (X theme)
@@ -221,7 +253,8 @@ x-virality-extension/
 ### Technologies
 
 - **Manifest V3** - Latest Chrome extension format
-- **Vanilla JavaScript** - No framework dependencies
+- **Node.js + Express** - Backend server for secure API calls
+- **Vanilla JavaScript** - No framework dependencies (extension)
 - **CSS3** - Modern styling with X theme matching
 - **Grok API** - AI-powered analysis
 - **Chrome Storage API** - Settings and history
@@ -237,6 +270,23 @@ x-virality-extension/
 
 ## 🐛 Troubleshooting
 
+### Server Issues
+
+- **"Backend server is not running"**
+  - Ensure the server is started: `cd server && npm start`
+  - Check that it's running on port 3000
+  - Visit `http://localhost:3000/health` to verify
+
+- **"Cannot connect to backend server"**
+  - Verify server is running in terminal
+  - Check for port conflicts (kill other processes on port 3000)
+  - Check firewall settings
+
+- **"Invalid API key configured on server"**
+  - Check `.env` file in `server/` directory
+  - Verify `GROK_API_KEY` is set correctly
+  - Restart the server after changing `.env`
+
 ### Button Not Appearing
 
 1. **Refresh Twitter** - Try reloading the page
@@ -245,25 +295,20 @@ x-virality-extension/
    - Check console for errors
    - Selectors may need updating in `lib/constants.js`
 
-### API Key Issues
-
-- **"Invalid API key"**
-  - Verify key is correct at console.x.ai
-  - Check for extra spaces when pasting
-
-- **"Insufficient credits"**
-  - Add credits to your Grok account
-  - Visit console.x.ai/billing
-
 ### Analysis Fails
 
-- **"Network error"**
-  - Check internet connection
-  - Verify firewall isn't blocking api.x.ai
+- **"Insufficient credits"**
+  - Add credits to your Grok account at console.x.ai/billing
+  - Server will return this error from Grok API
 
 - **"Rate limit exceeded"**
   - Wait 6 seconds between analyses
-  - Grok enforces rate limits
+  - Both extension and Grok API enforce rate limits
+
+- **"Network error"**
+  - Check internet connection
+  - Ensure server can reach api.x.ai
+  - Check firewall settings
 
 ### General Issues
 
@@ -275,29 +320,43 @@ x-virality-extension/
    - Right-click page → Inspect → Console
    - Look for errors with "X Virality Checker"
 
-3. **Report Bug**
+3. **Check Server Logs**
+   - Look at the terminal where server is running
+   - Server logs all requests and errors
+
+4. **Report Bug**
    - Include browser version
    - Include console errors
+   - Include server logs
    - Describe steps to reproduce
 
 ## 🔒 Privacy & Security
 
 ### What Data is Sent
 
-- **To Grok API**: Your tweet content only
-- **Nowhere else**: No tracking, no analytics
+- **To Backend Server**: Your tweet content, follower count, and bio
+- **To Grok API**: Backend server forwards content to Grok for analysis
+- **Nowhere else**: No tracking, no analytics, no third-party services
 
 ### Data Storage
 
-- **Chrome Storage**: API key, settings, history (local only)
-- **No External Servers**: Everything stays on your device
+- **Backend Server**: Grok API key stored in `.env` file (never exposed to client)
+- **Chrome Storage**: Settings and analysis history (local only)
+- **No Database**: Server doesn't store any of your tweets or data
 - **No Telemetry**: We don't track your usage
+
+### Security Architecture
+
+- **API Key Protection**: Key stays on your server, never in the extension code
+- **Local Server**: Runs on localhost, not exposed to internet
+- **CORS Protection**: Server only accepts requests from the extension
+- **Input Validation**: Server validates all requests before processing
 
 ### Permissions Explained
 
-- `storage`: Store API key and settings locally
+- `storage`: Store settings and history locally
 - `activeTab`: Read tweet content you're analyzing
-- `host_permissions`: Inject UI into X/Twitter, call Grok API
+- `host_permissions`: Inject UI into X/Twitter, call local backend server
 
 ### Open Source
 

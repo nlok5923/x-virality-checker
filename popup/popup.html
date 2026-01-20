@@ -18,32 +18,16 @@
       <h1 class="popup-title">X Virality Checker</h1>
     </div>
 
-    <!-- API Key Section -->
+    <!-- Info Section -->
     <div class="section">
-      <h2 class="section-title">🔑 Grok API Key</h2>
+      <h2 class="section-title">ℹ️ About</h2>
       <p class="section-description">
-        Required to analyze your tweets. Get your free API key at
-        <a href="https://console.x.ai" target="_blank">console.x.ai</a>
+        This extension uses a secure backend server to analyze your tweets with Grok AI.
+        No API key configuration needed!
       </p>
-
-      <div class="input-group">
-        <input
-          type="password"
-          id="apiKeyInput"
-          class="input-field"
-          placeholder="Enter your Grok API key"
-        />
-        <button id="toggleKeyVisibility" class="btn-icon" title="Toggle visibility">
-          <svg id="eyeIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-      </div>
-
-      <div id="apiKeyStatus" class="status-message"></div>
-
-      <button id="saveApiKeyBtn" class="btn btn-primary">Save API Key</button>
+      <p class="section-note">
+        <strong>Note:</strong> Make sure the backend server is running on <code>http://localhost:3000</code>
+      </p>
     </div>
 
     <!-- Usage Stats Section -->
