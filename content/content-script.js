@@ -81,23 +81,20 @@ function injectButton(toolbar) {
   // Create the button
   const button = createEvaluateButton();
 
-  // Find insertion point (before the compose tweet audience selector)
-  // Twitter's toolbar structure varies, so we try multiple approaches
-  const insertionPoints = [
-    toolbar.querySelector('[data-testid="scheduleOption"]'),
-    toolbar.querySelector('[aria-label*="Everyone"]'),
-    toolbar.querySelector('[aria-haspopup="menu"]')
-  ];
+  // Twitter's toolbar has two main sections:
+  // 1. Left side with media buttons (emoji, gif, poll, etc.)
+  // 2. Right side with character count and tweet button
 
-  const insertBefore = insertionPoints.find(el => el !== null);
+  // Find the left section (contains the media buttons)
+  const leftSection = toolbar.querySelector('div[role="group"]') || toolbar.firstElementChild;
 
-  if (insertBefore && insertBefore.parentNode) {
-    // Insert before the found element
-    insertBefore.parentNode.insertBefore(button, insertBefore);
+  if (leftSection) {
+    // Append to the end of the left section (after other media buttons)
+    leftSection.appendChild(button);
     console.log('X Virality Checker: Button injected successfully');
   } else {
-    // Fallback: append to toolbar
-    toolbar.appendChild(button);
+    // Fallback: prepend to toolbar start
+    toolbar.prepend(button);
     console.log('X Virality Checker: Button injected (fallback)');
   }
 }
@@ -143,35 +140,53 @@ async function handleEvaluateClick(e) {
     return;
   }
 
+  // Check if chrome runtime is available
+  if (!chrome || !chrome.runtime) {
+    showToast('❌ Extension error: Chrome API not available', 'error');
+    console.error('Chrome runtime not available');
+    return;
+  }
+
   // Show loading modal
   showLoadingModal();
 
   // Send to background script for analysis
-  chrome.runtime.sendMessage(
-    {
-      action: 'analyzeTweet',
-      content: content
-    },
-    (response) => {
-      hideLoadingModal();
+  try {
+    chrome.runtime.sendMessage(
+      {
+        action: 'analyzeTweet',
+        content: content
+      },
+      (response) => {
+        hideLoadingModal();
 
-      if (chrome.runtime.lastError) {
-        console.error('X Virality Checker Error:', chrome.runtime.lastError);
-        showToast('❌ Extension error. Please try again.', 'error');
-        return;
+        if (chrome.runtime.lastError) {
+          console.error('X Virality Checker Error:', chrome.runtime.lastError);
+          showToast('❌ Extension error. Please reload the page and try again.', 'error');
+          return;
+        }
+
+        if (!response) {
+          showToast('❌ No response from extension. Please reload the extension.', 'error');
+          return;
+        }
+
+        if (response.success) {
+          // Show results modal
+          showResultsModal(response.analysis, content);
+
+          // Record this analysis for rate limiting
+          recordAnalysis();
+        } else {
+          handleAnalysisError(response.error);
+        }
       }
-
-      if (response.success) {
-        // Show results modal
-        showResultsModal(response.analysis, content);
-
-        // Record this analysis for rate limiting
-        recordAnalysis();
-      } else {
-        handleAnalysisError(response.error);
-      }
-    }
-  );
+    );
+  } catch (error) {
+    hideLoadingModal();
+    console.error('Failed to send message:', error);
+    showToast('❌ Extension error. Please reload the page.', 'error');
+  }
 }
 
 // Get tweet content from the active compose box
@@ -196,26 +211,42 @@ function getTweetContent() {
   return '';
 }
 
-// Check rate limiting
+// Check rate limiting (uses background script for storage)
 async function checkRateLimit() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get('lastAnalysisTime', (result) => {
-      const lastTime = result.lastAnalysisTime || 0;
-      const now = Date.now();
+  try {
+    if (!chrome || !chrome.runtime) {
+      console.warn('Chrome runtime API not available, skipping rate limit check');
+      return { allowed: true };
+    }
 
-      if (now - lastTime < RATE_LIMIT.cooldownMs) {
-        const waitTime = Math.ceil((RATE_LIMIT.cooldownMs - (now - lastTime)) / 1000);
-        resolve({ allowed: false, waitTime });
-      } else {
-        resolve({ allowed: true });
-      }
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: 'checkRateLimit' },
+        (response) => {
+          if (chrome.runtime.lastError || !response) {
+            console.warn('Rate limit check failed, allowing analysis');
+            resolve({ allowed: true });
+            return;
+          }
+          resolve(response);
+        }
+      );
     });
-  });
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    return { allowed: true };
+  }
 }
 
-// Record analysis for rate limiting
+// Record analysis for rate limiting (uses background script for storage)
 function recordAnalysis() {
-  chrome.storage.local.set({ lastAnalysisTime: Date.now() });
+  try {
+    if (chrome && chrome.runtime) {
+      chrome.runtime.sendMessage({ action: 'recordAnalysis' });
+    }
+  } catch (error) {
+    console.error('Failed to record analysis:', error);
+  }
 }
 
 // Handle analysis errors
@@ -243,11 +274,24 @@ function handleAnalysisError(error) {
 
 // Check if API key is configured
 function checkApiKeyStatus() {
-  chrome.runtime.sendMessage({ action: 'checkApiKey' }, (response) => {
-    if (response && !response.status.configured) {
-      console.log('X Virality Checker: API key not configured');
+  try {
+    if (!chrome || !chrome.runtime) {
+      console.warn('Chrome runtime API not available');
+      return;
     }
-  });
+
+    chrome.runtime.sendMessage({ action: 'checkApiKey' }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn('Could not check API key:', chrome.runtime.lastError);
+        return;
+      }
+      if (response && !response.status.configured) {
+        console.log('X Virality Checker: API key not configured');
+      }
+    });
+  } catch (error) {
+    console.error('Failed to check API key status:', error);
+  }
 }
 
 // Initialize when DOM is ready

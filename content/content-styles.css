@@ -4,7 +4,10 @@
 .virality-evaluate-btn-wrapper {
   display: inline-flex;
   align-items: center;
-  margin: 0 4px;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .virality-evaluate-btn {
@@ -13,13 +16,18 @@
   justify-content: center;
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   border: none;
   background: transparent;
   color: rgb(29, 155, 240);
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 9999px;
   transition: background-color 0.2s ease;
   padding: 0;
+  margin: 0;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .virality-evaluate-btn:hover {
@@ -33,6 +41,7 @@
 .virality-evaluate-btn svg {
   width: 20px;
   height: 20px;
+  display: block;
 }
 
 /* Dark mode support */

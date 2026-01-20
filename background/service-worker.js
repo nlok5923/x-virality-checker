@@ -23,13 +23,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     return true;
   }
+
+  if (request.action === 'checkRateLimit') {
+    checkRateLimitStorage()
+      .then(result => {
+        sendResponse(result);
+      })
+      .catch(error => {
+        sendResponse({ allowed: true });
+      });
+    return true;
+  }
+
+  if (request.action === 'recordAnalysis') {
+    recordAnalysisStorage();
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
 // Main analysis function
 async function handleAnalyzeTweet(tweetContent) {
   // Get API key from storage
-  const result = await chrome.storage.sync.get('grokApiKey');
-  const apiKey = result.grokApiKey;
+  // const result = await chrome.storage.sync.get('grokApiKey');
+  const apiKey = 'xai-kW3shB0I1iT3scNNUiPwowKZVskFEYzp1eCrLUSkhunD9BQ3P1y85XnAXC6BuJOmBaRMchlTcHZ6ID8h';
+  // result.grokApiKey;
 
   if (!apiKey) {
     throw new Error('MISSING_API_KEY');
@@ -61,15 +79,15 @@ async function callGrokAPI(apiKey, tweetContent) {
   const prompt = generateAnalysisPrompt(tweetContent);
 
   try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    const response = await fetch('https://api.x.ai/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'grok-beta',
-        messages: [
+        model: 'grok-4',
+        input: [
           {
             role: 'system',
             content: 'You are an expert at analyzing tweet virality based on X\'s open-source recommendation algorithm. You understand engagement patterns, content quality, and what makes tweets go viral. Provide detailed, actionable analysis in JSON format.'
@@ -99,7 +117,25 @@ async function callGrokAPI(apiKey, tweetContent) {
     }
 
     const data = await response.json();
-    const analysisText = data.choices[0].message.content;
+
+    // Handle both Responses API and Chat Completions API formats
+    let analysisText;
+    if (data.output && Array.isArray(data.output) && data.output[0]) {
+      // Responses API format: output[0].content[0].text
+      const firstOutput = data.output[0];
+      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content[0]) {
+        analysisText = firstOutput.content[0].text;
+      } else {
+        console.error('Unexpected output structure:', firstOutput);
+        throw new Error('Unexpected response format from Grok API');
+      }
+    } else if (data.choices && data.choices[0] && data.choices[0].message) {
+      // Chat Completions API format (fallback)
+      analysisText = data.choices[0].message.content;
+    } else {
+      console.error('Unexpected response format:', data);
+      throw new Error('Unexpected response format from Grok API');
+    }
 
     // Parse JSON response
     let analysis;
@@ -246,4 +282,26 @@ async function checkApiKeyStatus() {
     configured: !!result.grokApiKey,
     hasKey: !!result.grokApiKey
   };
+}
+
+// Rate limit constants
+const RATE_LIMIT_COOLDOWN_MS = 6000; // 6 seconds
+
+// Check rate limit from storage
+async function checkRateLimitStorage() {
+  const result = await chrome.storage.local.get('lastAnalysisTime');
+  const lastTime = result.lastAnalysisTime || 0;
+  const now = Date.now();
+
+  if (now - lastTime < RATE_LIMIT_COOLDOWN_MS) {
+    const waitTime = Math.ceil((RATE_LIMIT_COOLDOWN_MS - (now - lastTime)) / 1000);
+    return { allowed: false, waitTime };
+  }
+
+  return { allowed: true };
+}
+
+// Record analysis timestamp in storage
+async function recordAnalysisStorage() {
+  await chrome.storage.local.set({ lastAnalysisTime: Date.now() });
 }

@@ -126,21 +126,32 @@ function applyRewrite() {
   const activeTextarea = textareas.find(ta => ta && ta.textContent.trim() === currentOriginalContent.trim());
 
   if (activeTextarea) {
-    // Clear existing content
-    activeTextarea.textContent = '';
-
-    // Insert new content
-    activeTextarea.textContent = currentAnalysis.rewriteExample;
-
-    // Trigger input event so Twitter updates character count
-    const inputEvent = new Event('input', { bubbles: true });
-    activeTextarea.dispatchEvent(inputEvent);
-
-    // Focus the textarea
+    // Focus first to ensure the element is active
     activeTextarea.focus();
 
+    // Select all existing content
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(activeTextarea);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Use execCommand to replace content (this maintains editability)
+    document.execCommand('insertText', false, currentAnalysis.rewriteExample);
+
+    // Move cursor to end
+    range.selectNodeContents(activeTextarea);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Trigger input events to update character count
+    activeTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    activeTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+    activeTextarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+
     // Show success toast
-    showToast('✅ Rewrite applied! Review and post when ready.', 'success');
+    showToast('✅ Rewrite applied! Review and edit as needed.', 'success');
 
     // Close modal
     closeModal();
