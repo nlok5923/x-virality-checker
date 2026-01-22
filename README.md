@@ -1,5 +1,6 @@
 # Installation
 
+- Clone this repo with `git clone https://github.com/nlok5923/x-virality-checker.git`
 - Head over to `chrome://extensions/`
 - Enable Developer Mode on top right
 <img width="1510" height="251" alt="image" src="https://github.com/user-attachments/assets/d0b0c219-28be-4748-8de0-c86348b04d68" />
