@@ -1,4 +1,20 @@
-# X Virality Checker - Chrome Extension
+# Installation
+
+- Head over to `chrome://extensions/`
+- Enable Developer Mode on top right
+<img width="1510" height="251" alt="image" src="https://github.com/user-attachments/assets/d0b0c219-28be-4748-8de0-c86348b04d68" />
+
+- Click on `Load Unpacked` on top left of the above screenshot
+- Select the directory where of this cloned repo
+
+<img width="903" height="512" alt="image" src="https://github.com/user-attachments/assets/adfea8f1-f631-4936-b6ff-5dfb90d71ec7" />
+
+- Use the ⚡ icon to evaluate your tweet potential
+
+<img width="643" height="340" alt="image" src="https://github.com/user-attachments/assets/8a9883f0-a055-4272-a880-85b8fbfa0e3f" />
+
+
+# About 
 
 > Analyze tweet virality using Grok AI and X's recommendation algorithm before you post!
 
